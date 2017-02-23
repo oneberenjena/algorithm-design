@@ -1,6 +1,6 @@
 import java.util.Iterator;
 import java.util.NoSuchElementException;
-import java.lang.Math.max;
+
 
 public class Graph {
     private static final String NEWLINE = System.getProperty("line.separator");
@@ -9,12 +9,13 @@ public class Graph {
     private boolean[][] adj;
     private float[][] profit;
     private float[][] cost;
+    private boolean[][] visited;
     
     // empty graph with V vertices
-    public Graph(int V) {
+    public Graph(int V, int E) {
         if (V < 0) throw new RuntimeException("Number of vertices must be nonnegative");
         this.V = V;
-        this.E = 0;
+        this.E = E;
         this.adj = new boolean[V][V];
         this.profit = new float[V][V];
         this.cost = new float[V][V];
@@ -24,6 +25,7 @@ public class Graph {
     public int V() { return V; }
     public int E() { return E; }
 
+    public boolean[][] gAdj() { return adj; }
 
     // add undirected edge v-w
     public void addEdge(int v, int w, float p, float c) {
@@ -47,7 +49,7 @@ public class Graph {
     // does the graph contain the edge v-w?
     public boolean contains(int v, int w) {
         return adj[v][w];
-    }
+    }   
 
     // return list of neighbors of v
     public Iterable<Integer> adj(int v) {
@@ -103,7 +105,7 @@ public class Graph {
         for (int v = 0; v < V; v++){
             for (int w : adj(v)) {
                 if (contains(v,w)){
-                    s.append(v + " <-> " + w + "    " + profit[v][w] + "    " + cost[v][w]);
+                    s.append((v+1) + " <-> " + (w+1) + "    " + profit[v][w] + "    " + cost[v][w]);
                     s.append(NEWLINE);
                 }
             }
@@ -111,28 +113,7 @@ public class Graph {
         return s.toString();
     }
 
-    public Graph findPath (int s, int d){
-        int V0 = 0;
-        Graph G = new Graph(V0);
-        if (s == d){
-            return null;
-        } else if (contains(s,d)){
-            V0++;
-            return G.addEdge(s,d);
-        } else{
-            int maxWeightedNeighbor = getMaxWeightedEdge(s);
-            G.addEdge(s,maxWeightedNeighbor );
-        }
-        
-    }
+    
 
-    public int getMaxWeightedEdge(int v){
-        int maxWeightedEdge = 0;
-        for (int w = 0: w < V(); w++){
-            maxWeightedEdge = max(maxWeightedEdge, profit[v][w]);
-        }
-        return maxWeightedEdge;
-    }
 
- 
 }

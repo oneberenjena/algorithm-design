@@ -4,23 +4,24 @@ import java.util.Scanner;
 
 public class Main {
 	public static void main(String[] args){	
-		Graph G = buildGraph();
+		Graph G = buildGraph(args[0]);
 	}
 
-	public static Graph buildGraph(){
-		File test=new File("test1");
+	public static Graph buildGraph(String arg){
+		File test=new File(arg);
 		try{
 	        Scanner sc = new Scanner(test);
 	        int V = sc.nextInt();
-	        Graph G = new Graph(V);
+	        int E = sc.nextInt();
+	        Graph G = new Graph(V, E);
 	        int w, v, p, c;
 	        while(sc.hasNextInt()){
 	        	v = sc.nextInt();
 	        	w = sc.nextInt();
 	        	p = sc.nextInt();
-	        	c = sc.nextInt();	        	
-	        	G.addEdge(v, w, p, c);
-	        }
+	        	c = sc.nextInt();
+	        	G.addEdge(v-1, w-1, p, c);
+	        }  
 	        sc.close();
 	        System.out.println(G);
 	        return G;
