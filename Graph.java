@@ -139,15 +139,17 @@ public class Graph {
     }
 
     public int findMaxVecino(float[][] matrix, int i){
-        int j = 0;
-        float max = (visited[i][j]) ? -cost[i][j] : matrix[i][j];
-        float tmpmax;
-        int tmpj = j;
-        for (j = 1; j < V ; j++) {
-            tmpmax = max;
-            max = (visited[i][j]) ? Math.max(max, -cost[i][j]) : Math.max(max, matrix[i][j]);
-            if (tmpmax == max){
+        float max = -Float.MAX_VALUE;
+        float tmpmax = max;
+        int tmpj = 0;
+        for (int j = 0; j < V; j++ ) {
+            if (adj[i][j]){
+                max = (visited[i][j]) ? Math.max(max, cost[i][j]):
+                                        Math.max(max, matrix[i][j]);
+            }
+            if (tmpmax != max){
                 tmpj = j;
+                tmpmax = max;
             }
         }
         return tmpj;
@@ -162,7 +164,12 @@ public class Graph {
         int maxSig = findMaxVecino(matrix,di);
         
 
+
         System.out.println(maxSig);
     }   
+
+    public int[] recursionAlgoritmode(float[][] matrix, int i){
+        
+    }
 
 }
