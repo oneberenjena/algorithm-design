@@ -2,6 +2,7 @@ import java.util.Iterator;
 import java.util.NoSuchElementException;
 
 
+
 public class Graph {
     private static final String NEWLINE = System.getProperty("line.separator");
     private int V;
@@ -19,6 +20,7 @@ public class Graph {
         this.adj = new boolean[V][V];
         this.profit = new float[V][V];
         this.cost = new float[V][V];
+        this.visited = new boolean[V][V];
     }
 
     // number of vertices and edges
@@ -54,6 +56,20 @@ public class Graph {
     // return list of neighbors of v
     public Iterable<Integer> adj(int v) {
         return new AdjIterator(v);
+    }
+
+    public float[][] benefitsMatrix(){
+        float[][] matrix = new float[V][V];
+        for (int i = 0; i < V; i++){
+            for (int j = 0; j < V; j++){
+                matrix[i][j] = profit[i][j] - cost[i][j];
+            }
+        }
+        return matrix;
+    }
+
+    public void visitEdge(int i, int j){
+        visited[i][j] = true;
     }
 
     // support iteration over graph vertices
@@ -113,7 +129,40 @@ public class Graph {
         return s.toString();
     }
 
-    
+    public void printmatrix(float[][] matrix){
+        for (int i = 0; i<V ; i++) {
+            System.out.println("");
+            for (int j = 0; j<V  ; j++) {
+                System.out.print(matrix[i][j] + "     ");
+            }
+        }
+    }
 
+    public int findMaxVecino(float[][] matrix, int i){
+        int j = 0;
+        float max = (visited[i][j]) ? -cost[i][j] : matrix[i][j];
+        float tmpmax;
+        int tmpj = j;
+        for (j = 1; j < V ; j++) {
+            tmpmax = max;
+            max = (visited[i][j]) ? Math.max(max, -cost[i][j]) : Math.max(max, matrix[i][j]);
+            if (tmpmax == max){
+                tmpj = j;
+            }
+        }
+        return tmpj;
+    }
+
+    public void algoritmode(int di){
+        // printmatrix(benefitsMatrix());   
+
+        // Desde el nodo deposito di, voy a buscar el camino
+        // de maximo beneficio en el grafo
+        float[][] matrix = benefitsMatrix();
+        int maxSig = findMaxVecino(matrix,di);
+        
+
+        System.out.println(maxSig);
+    }   
 
 }

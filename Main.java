@@ -5,6 +5,7 @@ import java.util.Scanner;
 public class Main {
 	public static void main(String[] args){	
 		Graph G = buildGraph(args[0]);
+		G.algoritmode(0);
 	}
 
 	public static Graph buildGraph(String arg){
@@ -18,8 +19,8 @@ public class Main {
 	        while(sc.hasNextInt()){
 	        	v = sc.nextInt();
 	        	w = sc.nextInt();
-	        	p = sc.nextInt();
 	        	c = sc.nextInt();
+	        	p = sc.nextInt();
 	        	G.addEdge(v-1, w-1, p, c);
 	        }  
 	        sc.close();
