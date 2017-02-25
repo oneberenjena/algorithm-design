@@ -1,4 +1,5 @@
 import java.util.Iterator;
+import java.util.*;
 import java.util.NoSuchElementException;
 
 
@@ -11,6 +12,7 @@ public class Graph {
     private float[][] profit;
     private float[][] cost;
     private boolean[][] visited;
+    private float[][] benefits;
     
     // empty graph with V vertices
     public Graph(int V, int E) {
@@ -21,6 +23,7 @@ public class Graph {
         this.profit = new float[V][V];
         this.cost = new float[V][V];
         this.visited = new boolean[V][V];
+        this.benefits = new float[V][V];
     }
 
     // number of vertices and edges
@@ -58,14 +61,14 @@ public class Graph {
         return new AdjIterator(v);
     }
 
-    public float[][] benefitsMatrix(){
-        float[][] matrix = new float[V][V];
+    public void benefitsMatrix(){
+        // float[][] matrix = new float[V][V];
         for (int i = 0; i < V; i++){
             for (int j = 0; j < V; j++){
-                matrix[i][j] = profit[i][j] - cost[i][j];
+                benefits[i][j] = profit[i][j] - cost[i][j];
             }
         }
-        return matrix;
+        // return matrix;
     }
 
     public void visitEdge(int i, int j){
@@ -129,23 +132,23 @@ public class Graph {
         return s.toString();
     }
 
-    public void printmatrix(float[][] matrix){
+    public void printmatrix(){
         for (int i = 0; i<V ; i++) {
             System.out.println("");
             for (int j = 0; j<V  ; j++) {
-                System.out.print(matrix[i][j] + "     ");
+                System.out.print(benefits[i][j] + "     ");
             }
         }
     }
 
-    public int findMaxVecino(float[][] matrix, int i){
+    public int findMaxVecino(int i){
         float max = -Float.MAX_VALUE;
         float tmpmax = max;
         int tmpj = 0;
         for (int j = 0; j < V; j++ ) {
             if (adj[i][j]){
                 max = (visited[i][j]) ? Math.max(max, cost[i][j]):
-                                        Math.max(max, matrix[i][j]);
+                                        Math.max(max, benefits[i][j]);
             }
             if (tmpmax != max){
                 tmpj = j;
@@ -155,21 +158,49 @@ public class Graph {
         return tmpj;
     }
 
+    public boolean adjacent_visited(int i){
+        for (int j = 0; j<V; j++) {
+            if (!visited[i][j]) {return false;}
+        }
+        return true;
+    }
+
     public void algoritmode(int di){
         // printmatrix(benefitsMatrix());   
 
         // Desde el nodo deposito di, voy a buscar el camino
         // de maximo beneficio en el grafo
-        float[][] matrix = benefitsMatrix();
-        int maxSig = findMaxVecino(matrix,di);
-        
-
-
-        System.out.println(maxSig);
+        benefitsMatrix();
+        Map<Integer, Integer> path = new HashMap<>();
+        path = resolvePath(di);
     }   
 
-    public int[] recursionAlgoritmode(float[][] matrix, int i){
+    public int recursionAlgoritmode(int i){
+        visited[i][i] = true;
         
+        if (!adjacent_visited(i)){
+            System.out.println("Caso en el que hay al menos un nodo por visitar");
+        } else {
+            System.out.println("Caso en el que ya no queda una mierda");
+        }
+
+        return 0;
+    }
+
+    public Map<Integer,Integer> resolvePath(int i){
+        visited[i][i] = true;
+        Map<Integer, Integer> path = new HashMap<>();
+        if (!adjacent_visited(i)){
+            int maxSig = findMaxVecino(i);
+            System.out.println(maxSig + " HAHAAAA");
+            path.put(i, maxSig);         
+            path.putAll(resolvePath(maxSig));
+            System.out.println(path);
+            return path;
+        } else {
+            Map<Integer, Integer> nothing = new HashMap<>();
+            return nothing;
+        }
     }
 
 }

@@ -24,7 +24,7 @@ public class Main {
 	        	G.addEdge(v-1, w-1, p, c);
 	        }  
 	        sc.close();
-	        System.out.println(G);
+	        // System.out.println(G);
 	        return G;
 		}catch (FileNotFoundException e) {
 	        e.printStackTrace();
