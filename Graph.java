@@ -9,10 +9,10 @@ public class Graph {
     private int V;
     private int E;
     private boolean[][] adj;
-    private float[][] profit;
-    private float[][] cost;
+    private double[][] profit;
+    private double[][] cost;
     private boolean[][] visited;
-    private float[][] benefits;
+    private double[][] benefits;
     private int optimalValue;
     
     // empty graph with V vertices
@@ -21,10 +21,10 @@ public class Graph {
         this.V = V;
         this.E = E;
         this.adj = new boolean[V][V];
-        this.profit = new float[V][V];
-        this.cost = new float[V][V];
+        this.profit = new double[V][V];
+        this.cost = new double[V][V];
         this.visited = new boolean[V][V];
-        this.benefits = new float[V][V]; 
+        this.benefits = new double[V][V]; 
         this.optimalValue = 0;
     }
 
@@ -35,7 +35,7 @@ public class Graph {
     public boolean[][] gAdj() { return adj; }
 
     // add undirected edge v-w
-    public void addEdge(int v, int w, float p, float c) {
+    public void addEdge(int v, int w, double p, double c) {
         if (!adj[v][w]) E++;
         adj[v][w] = true;
         adj[w][v] = true;
@@ -43,12 +43,12 @@ public class Graph {
         addEdgeCost(v, w, c);
     }
 
-    public void addEdgeProfit(int v, int w, float p){
+    public void addEdgeProfit(int v, int w, double p){
         profit[v][w] = p;
         profit[w][v] = p;
     }
 
-    public void addEdgeCost(int v, int w, float c){
+    public void addEdgeCost(int v, int w, double c){
         cost[v][w] = c;
         cost[w][v] = c;
     }
@@ -142,8 +142,8 @@ public class Graph {
     // Funcion que retorna el indice del nodo vecino cuyo
     // camino sea el de mayor beneficio
     public int findMaxVecino(int i){
-        float max = -Float.MAX_VALUE;
-        float tmpmax = max;
+        double max = Double.NEGATIVE_INFINITY;
+        double tmpmax = max;
         int tmpj = 0;
         for (int j : adj(i)){
             max = Math.max(max, benefits[i][j]);
@@ -226,8 +226,8 @@ public class Graph {
     // de costo maximo que pasa por el deposito
     public void runResolvePath(int di){
         benefitsMatrix();   // Se determina la matriz de beneficios
-        Map<Integer, Integer> path1 = new HashMap<>();
-        Map<Integer, Integer> path2 = new HashMap<>();
+        Map<Integer, Integer> path1 = new LinkedHashMap<>();
+        Map<Integer, Integer> path2 = new LinkedHashMap<>();
         path1 = resolvePath(di);  
         System.out.println(path1);
         path2 = minCostPath(2,di); //cableado, necesito el ultimo nodo visitado por el primer algoritmo
@@ -240,11 +240,11 @@ public class Graph {
         // El nodo entrante se marca como visitado y se inicializa el camino
         visitVertex(i);
         System.out.println("Visited vertex " + i);
-        Map<Integer, Integer> path = new HashMap<>();
+        Map<Integer, Integer> path = new LinkedHashMap<>();
         // Si no hay nodos vecinos por visitar y todas las aristas son de costo negativo,
         // finaliza la recursion
         if (adjacent_visitedVertex(i) && adjacentP_edges(i)){
-            Map<Integer, Integer> nothing = new HashMap<>();
+            Map<Integer, Integer> nothing = new LinkedHashMap<>();
             System.out.println("nothing else, all bad edges");
             return nothing;
         } else {
