@@ -14,6 +14,8 @@ public class Graph {
     private boolean[][] visited;
     private double[][] benefits;
     private int optimalValue;
+    private double[][] distances;
+    private double[][] g; 
     
     // empty graph with V vertices
     public Graph(int V, int E) {
@@ -26,6 +28,8 @@ public class Graph {
         this.visited = new boolean[V][V];
         this.benefits = new double[V][V]; 
         this.optimalValue = 0;
+        this.distances = new double[V][V];
+        this.g = new double[V][V];
     }
 
     // number of vertices and edges
@@ -41,6 +45,14 @@ public class Graph {
         adj[w][v] = true;
         addEdgeProfit(v, w, p);
         addEdgeCost(v, w, c);
+    }
+
+    public void intializeG(){
+        for (int i = 0; i< V ; i++ ) {
+            for (int j : adj(i) ) {
+                g[i][j] = Double.POSITIVE_INFINITY;
+            }
+        }
     }
 
     public void addEdgeProfit(int v, int w, double p){
@@ -147,7 +159,7 @@ public class Graph {
         int tmpj = 0;
         for (int j : adj(i)){
             max = Math.max(max, benefits[i][j]);
-            if (tmpmax != max){
+            if (tmpmax != max){ 
                 tmpj = j;
                 tmpmax = max;
             }
@@ -260,23 +272,143 @@ public class Graph {
         }
     }
 
+    // public void initializeDistances(){
+    //     for (int i = 0; i<V ; i++ ) {
+    //         for (int j : adj(i)) {
+    //             distances[i][j] = Double.NEGATIVE_INFINITY;
+    //         }
+    //     }
+    // }
+
+    // public static void computePaths(Vertex source)
+    // {
+    //     source.minDistance = 0.;
+    //     PriorityQueue<Vertex> vertexQueue = new PriorityQueue<Vertex>();
+    // vertexQueue.add(source);
+
+    // while (!vertexQueue.isEmpty()) {
+    //     Vertex u = vertexQueue.poll();
+
+    //         // Visit each edge exiting u
+    //         for (Edge e : u.adjacencies)
+    //         {
+    //             Vertex v = e.target;
+    //             double weight = e.weight;
+    //             double distanceThroughU = u.minDistance + weight;
+    //     if (distanceThroughU < v.minDistance) {
+    //         vertexQueue.remove(v);
+
+    //         v.minDistance = distanceThroughU ;
+    //         v.previous = u;
+    //         vertexQueue.add(v);
+    //     }
+    //         }
+    //     }
+    // }
+
+    // public static List<Vertex> getShortestPathTo(Vertex target)
+    // {
+    //     List<Vertex> path = new ArrayList<Vertex>();
+    //     for (Vertex vertex = target; vertex != null; vertex = vertex.previous)
+    //         path.add(vertex);
+
+    //     Collections.reverse(path);
+    //     return path;
+    // }    
+
+
+
+
+
+
     // Estoy pegado con esta mierda
-    public Map<Integer,Integer> minCostPath(int i, int j){
-        System.out.println("");
-        System.out.println("Starting from vertex " + i);
-        int maxSig = findMaxVecino(i);
-        System.out.println("Detected min weight edge " + maxSig);
-        Map<Integer,Integer> minPath = new HashMap<>();
-        if (contains(i,j) ){
-            System.out.println("Detected deposit on sight");
-            crossEdge2(i,j);
-            minPath.put(i,j);
-            return minPath;
-        } else {
-            System.out.println("Crossing edge to next vertex");
-            crossEdge2(i,maxSig);
-            minPath.putAll(minCostPath(maxSig, j));
-            return minPath;
+    // public Map<Integer,Integer> minCostPath(int i, int j){
+    //     System.out.println("");
+    //     System.out.println("Starting from vertex " + i);
+    //     int maxSig = findMaxVecino(i);
+    //     System.out.println("Detected min weight edge " + maxSig);
+    //     Map<Integer,Integer> minPath = new HashMap<>();
+    //     if (contains(i,j) ){
+    //         System.out.println("Detected deposit on sight");
+    //         crossEdge2(i,j);
+    //         minPath.put(i,j);
+    //         return minPath;
+    //     } else {
+    //         System.out.println("Crossing edge to next vertex");
+    //         crossEdge2(i,maxSig);
+    //         minPath.putAll(minCostPath(maxSig, j));
+    //         return minPath;
+    //     }
+    // }
+}
+
+public class AStar extends Graph{
+
+    private final Graph graph;
+
+    public AStar (Graph graph){
+        this.graph = graph;
+    } 
+
+     public class VertexComparator implements Comparator<int> {
+        public int compare(int nodeFirst, int nodeSecond) {
+            if (f[nodeFirst] > f[nodeSecond]) return 1;
+            if (f[nodeSecond] > f[nodeFirst]) return -1;
+            return 0;
         }
+    } 
+
+    public List<int> astar(int source, int target){
+        final Queue<int> openSet = new PriorityQueue<>(11, new VertexComparator());
+        
+        // En nuestro caso, la heuristica representa el par entre
+        // el nodo en cuestion y sus costos a un siguiente nodo
+
+        setG(source, 0); //!!!!!!!!
+        calcF(source, target); //!!!!!!!
+        openSet.add(source);
+
+        final Map<int,int> path = new HashMap<>();
+        final Set<int> closedSet = new HashSet<>();
+
+        while (!openSet.isEmpty()) {
+            final int current = openSet.poll();
+
+            if (current == target) {return reconstruct_path(path, target);}
+
+            closedSet.add(current);
+
+            for (int neighbor : adj(current)){
+                if (closedSet.contains(neighbor)) {continue;}
+
+                double edgeCost = graph.benefits[current][neighbor];
+                double tentativeG = edgeCost + vertexG(current);    // !!!!!!!
+
+                if (tentativeG < vertexG(neighbor)){
+                    setG(neighbor, tentativeG); // !!!!!!!!!!
+                    calcF(neighbor, target);    // !!!!!!!!!!
+
+                    path.put(neighbor, current);
+                    if (!openSet.contains(neighbor)) {openSet.add(neighbor);}
+                }
+            }
+        }
+
+        return null;
+    }   
+
+    private List<int> reconstruct_path(Map<int, int> path, int target) {
+        assert path != null;
+        // assert target != null;
+
+        final List<int> pathList = new ArrayList<int>();
+        pathList.add(target);
+        while (path.containsKey(target)) {
+            target = path.get(target);
+            pathList.add(target);
+        }
+        Collections.reverse(pathList);
+        return pathList;
     }
+
 }
