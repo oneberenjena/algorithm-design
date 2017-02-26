@@ -5,7 +5,7 @@ import java.util.Scanner;
 public class Main {
 	public static void main(String[] args){	
 		Graph G = buildGraph(args[0]);
-		G.algoritmode(0);
+		G.runResolvePath(0);
 	}
 
 	public static Graph buildGraph(String arg){

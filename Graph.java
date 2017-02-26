@@ -13,6 +13,7 @@ public class Graph {
     private float[][] cost;
     private boolean[][] visited;
     private float[][] benefits;
+    private int optimalValue;
     
     // empty graph with V vertices
     public Graph(int V, int E) {
@@ -23,7 +24,8 @@ public class Graph {
         this.profit = new float[V][V];
         this.cost = new float[V][V];
         this.visited = new boolean[V][V];
-        this.benefits = new float[V][V];
+        this.benefits = new float[V][V]; 
+        this.optimalValue = 0;
     }
 
     // number of vertices and edges
@@ -62,20 +64,17 @@ public class Graph {
     }
 
     public void benefitsMatrix(){
-        // float[][] matrix = new float[V][V];
         for (int i = 0; i < V; i++){
             for (int j = 0; j < V; j++){
                 benefits[i][j] = profit[i][j] - cost[i][j];
             }
         }
-        // return matrix;
     }
 
     public void visitEdge(int i, int j){
         visited[i][j] = true;
     }
 
-    // support iteration over graph vertices
     private class AdjIterator implements Iterator<Integer>, Iterable<Integer> {
         private int v;
         private int w = 0;
@@ -108,7 +107,6 @@ public class Graph {
         }
     }
 
-    // string representation of Graph - takes quadratic time
     public String toString() {
         StringBuilder s = new StringBuilder();
         s.append(V + "  " + E + NEWLINE);
@@ -136,7 +134,7 @@ public class Graph {
         for (int i = 0; i<V ; i++) {
             System.out.println("");
             for (int j = 0; j<V  ; j++) {
-                System.out.print(benefits[i][j] + "     ");
+                System.out.print(benefits[i][j] + "      ");
             }
         }
     }
@@ -145,11 +143,8 @@ public class Graph {
         float max = -Float.MAX_VALUE;
         float tmpmax = max;
         int tmpj = 0;
-        for (int j = 0; j < V; j++ ) {
-            if (adj[i][j]){
-                max = (visited[i][j]) ? Math.max(max, cost[i][j]):
-                                        Math.max(max, benefits[i][j]);
-            }
+        for (int j : adj(i)){
+            max = Math.max(max, benefits[i][j]);
             if (tmpmax != max){
                 tmpj = j;
                 tmpmax = max;
@@ -159,48 +154,99 @@ public class Graph {
     }
 
     public boolean adjacent_visited(int i){
-        for (int j = 0; j<V; j++) {
-            if (!visited[i][j]) {return false;}
+        for (int j : adj(i) ) {
+            if (!visited[i][j] && i != j) {return false;}
         }
         return true;
     }
 
-    public void algoritmode(int di){
-        // printmatrix(benefitsMatrix());   
+    public boolean adjacentP_edges(int i){
+        for (int j : adj(i) ) {
+            if (benefits[i][j] >= 0) {return false;}
+        }
+        return true;
+    }
 
-        // Desde el nodo deposito di, voy a buscar el camino
-        // de maximo beneficio en el grafo
+    public boolean adjacent_visitedVertex(int i){
+        for (int j : adj(i)){
+            if (!visited[j][j]) {return false;}
+        }
+        return true;
+    }
+
+    public void actMatrix(int i, int j){
+        benefits[i][j] = -cost[i][j];
+        benefits[j][i] = -cost[i][j];
+    }
+
+    public void actOptimalValue(int i, int j){
+        optimalValue += benefits[i][j];
+    }
+
+    public void crossEdge1(int i, int j){
+        visited[i][j] = true;
+        visited[j][i] = true;
+        actOptimalValue(i,j);
+        actMatrix(i, j);
+    }
+
+    public void crossEdge2(int i, int j){
+        if (!visited[i][j]){
+            visited[i][j] = true;
+            visited[j][i] = true;
+        }
+        actOptimalValue(i,j);
+    }
+
+    public void visitVertex(int i){
+        visited[i][i] = true;
+    }
+
+    public void runResolvePath(int di){
         benefitsMatrix();
-        Map<Integer, Integer> path = new HashMap<>();
-        path = resolvePath(di);
+        Map<Integer, Integer> path1 = new HashMap<>();
+        Map<Integer, Integer> path2 = new HashMap<>();
+        path1 = resolvePath(di);
+        System.out.println(path1);
+        path2 = minCostPath(2,di);
+        // printmatrix();
     }   
 
-    public int recursionAlgoritmode(int i){
-        visited[i][i] = true;
-        
-        if (!adjacent_visited(i)){
-            System.out.println("Caso en el que hay al menos un nodo por visitar");
-        } else {
-            System.out.println("Caso en el que ya no queda una mierda");
-        }
-
-        return 0;
-    }
-
-    public Map<Integer,Integer> resolvePath(int i){
-        visited[i][i] = true;
+    public Map<Integer,Integer> resolvePath(int i){        
+        visitVertex(i);
+        System.out.println("Visited vertex " + i);
         Map<Integer, Integer> path = new HashMap<>();
-        if (!adjacent_visited(i)){
-            int maxSig = findMaxVecino(i);
-            System.out.println(maxSig + " HAHAAAA");
-            path.put(i, maxSig);         
-            path.putAll(resolvePath(maxSig));
-            System.out.println(path);
-            return path;
-        } else {
+        if (adjacent_visitedVertex(i) && adjacentP_edges(i)){
             Map<Integer, Integer> nothing = new HashMap<>();
+            System.out.println("nothing else, all bad edges");
             return nothing;
+        } else {
+            int maxSig = findMaxVecino(i);
+            System.out.println("Found maxSig: " + maxSig);
+            System.out.println("Benefit for maxSig is: " + benefits[i][maxSig] + "\n");
+            path.put(i, maxSig);         
+            crossEdge1(i, maxSig);
+            path.putAll(resolvePath(maxSig));
+            return path;
         }
     }
 
+    public Map<Integer,Integer> minCostPath(int i, int j){
+        System.out.println("");
+        System.out.println("Starting from vertex " + i);
+        int maxSig = findMaxVecino(i);
+        System.out.println("Detected min weight edge " + maxSig);
+        Map<Integer,Integer> minPath = new HashMap<>();
+        if (contains(i,j) ){
+            System.out.println("Detected deposit on sight");
+            crossEdge2(i,j);
+            minPath.put(i,j);
+            return minPath;
+        } else {
+            System.out.println("Crossing edge to next vertex");
+            crossEdge2(i,maxSig);
+            minPath.putAll(minCostPath(maxSig, j));
+            return minPath;
+        }
+    }
 }
