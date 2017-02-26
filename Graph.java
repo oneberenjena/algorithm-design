@@ -139,6 +139,8 @@ public class Graph {
         }
     }
 
+    // Funcion que retorna el indice del nodo vecino cuyo
+    // camino sea el de mayor beneficio
     public int findMaxVecino(int i){
         float max = -Float.MAX_VALUE;
         float tmpmax = max;
@@ -153,13 +155,16 @@ public class Graph {
         return tmpj;
     }
 
-    public boolean adjacent_visited(int i){
-        for (int j : adj(i) ) {
-            if (!visited[i][j] && i != j) {return false;}
-        }
-        return true;
-    }
+    // public boolean adjacent_visited(int i){
+    //     for (int j : adj(i) ) {
+    //         if (!visited[i][j] && i != j) {return false;}
+    //     }
+    //     return true;
+    // }
 
+    // Funcion que retorna true si los caminos pertenecen al
+    // conjunto P, es decir, aristas cuyo beneficio es negativo
+    // retorna falso de existir alguna arista de costo positivo
     public boolean adjacentP_edges(int i){
         for (int j : adj(i) ) {
             if (benefits[i][j] >= 0) {return false;}
@@ -167,6 +172,9 @@ public class Graph {
         return true;
     }
 
+    // Funcion que retorna true si todos los nodos vecinos
+    // han sido visitados. De existir alguno que no haya
+    // sido visitado retorna false
     public boolean adjacent_visitedVertex(int i){
         for (int j : adj(i)){
             if (!visited[j][j]) {return false;}
@@ -174,15 +182,22 @@ public class Graph {
         return true;
     }
 
+    // Funcion usada al cruzar una arista por primera vez,
+    // actualiza el beneficio de una arista a su costo
     public void actMatrix(int i, int j){
         benefits[i][j] = -cost[i][j];
         benefits[j][i] = -cost[i][j];
     }
 
+    // Funcion que actualiza el valor optimo del camino
+    // al deposito por el ciclo
     public void actOptimalValue(int i, int j){
         optimalValue += benefits[i][j];
     }
 
+    // Funcion para cruzar aristas utilizada en el primer
+    // algoritmo. Permite visitar los caminos, actualiza
+    // el valor optimo y actualiza la matriz
     public void crossEdge1(int i, int j){
         visited[i][j] = true;
         visited[j][i] = true;
@@ -190,6 +205,10 @@ public class Graph {
         actMatrix(i, j);
     }
 
+    // Funcion para cruzar aristas utilizada en el segundo
+    // algoritmo. Difieren en que solo marca como visitado
+    // un camino si no ha sido visitado, de lo contrario
+    // solo actualiza el valor optimo del camino
     public void crossEdge2(int i, int j){
         if (!visited[i][j]){
             visited[i][j] = true;
@@ -198,29 +217,39 @@ public class Graph {
         actOptimalValue(i,j);
     }
 
+    // Funcion utilizada para marcar un nodo como visitado
     public void visitVertex(int i){
         visited[i][i] = true;
     }
 
+    // Funcion principal del algoritmo que determina el ciclo
+    // de costo maximo que pasa por el deposito
     public void runResolvePath(int di){
-        benefitsMatrix();
+        benefitsMatrix();   // Se determina la matriz de beneficios
         Map<Integer, Integer> path1 = new HashMap<>();
         Map<Integer, Integer> path2 = new HashMap<>();
-        path1 = resolvePath(di);
+        path1 = resolvePath(di);  
         System.out.println(path1);
-        path2 = minCostPath(2,di);
-        // printmatrix();
+        path2 = minCostPath(2,di); //cableado, necesito el ultimo nodo visitado por el primer algoritmo
     }   
 
+    // Primer algoritmo para calcular el camino de maximo beneficio
+    // partiendo del deposito, retorna un diccionario con el par nodo
+    // de salida y llegada.
     public Map<Integer,Integer> resolvePath(int i){        
+        // El nodo entrante se marca como visitado y se inicializa el camino
         visitVertex(i);
         System.out.println("Visited vertex " + i);
         Map<Integer, Integer> path = new HashMap<>();
+        // Si no hay nodos vecinos por visitar y todas las aristas son de costo negativo,
+        // finaliza la recursion
         if (adjacent_visitedVertex(i) && adjacentP_edges(i)){
             Map<Integer, Integer> nothing = new HashMap<>();
             System.out.println("nothing else, all bad edges");
             return nothing;
         } else {
+            // Se encuentra el nodo vecino de maximo beneficio, se marca el camino del
+            // nodo origen al vecino encontrado y se realiza la recursion con este nuevo nodo
             int maxSig = findMaxVecino(i);
             System.out.println("Found maxSig: " + maxSig);
             System.out.println("Benefit for maxSig is: " + benefits[i][maxSig] + "\n");
@@ -231,6 +260,7 @@ public class Graph {
         }
     }
 
+    // Estoy pegado con esta mierda
     public Map<Integer,Integer> minCostPath(int i, int j){
         System.out.println("");
         System.out.println("Starting from vertex " + i);
