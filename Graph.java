@@ -138,15 +138,6 @@ public class Graph {
         return s.toString();
     }
 
-    public void printmatrix(){
-        for (int i = 0; i<V ; i++) {
-            System.out.println("");
-            for (int j = 0; j<V  ; j++) {
-                System.out.print(benefits[i][j] + "      ");
-            }
-        }
-    }
-
     // Funcion que retorna el indice del nodo vecino cuyo
     // camino sea el de mayor beneficio
     public int findMaxVecino(int i){
@@ -162,13 +153,6 @@ public class Graph {
         }
         return tmpj;
     }
-
-    // public boolean adjacent_visited(int i){
-    //     for (int j : adj(i) ) {
-    //         if (!visited[i][j] && i != j) {return false;}
-    //     }
-    //     return true;
-    // }
 
     // Funcion que retorna true si los caminos pertenecen al
     // conjunto P, es decir, aristas cuyo beneficio es negativo
