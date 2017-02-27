@@ -14,8 +14,8 @@ public class Graph {
     private boolean[][] visited;
     private double[][] benefits;
     private int optimalValue;
-    private double[][] distances;
-    private double[][] g; 
+    private double[] dist;
+    private int[] prev;
     
     // empty graph with V vertices
     public Graph(int V, int E) {
@@ -28,8 +28,8 @@ public class Graph {
         this.visited = new boolean[V][V];
         this.benefits = new double[V][V]; 
         this.optimalValue = 0;
-        this.distances = new double[V][V];
-        this.g = new double[V][V];
+        this.dist = new double[V];
+        this.prev = new int[V];    
     }
 
     // number of vertices and edges
@@ -47,12 +47,8 @@ public class Graph {
         addEdgeCost(v, w, c);
     }
 
-    public void intializeG(){
-        for (int i = 0; i< V ; i++ ) {
-            for (int j : adj(i) ) {
-                g[i][j] = Double.POSITIVE_INFINITY;
-            }
-        }
+    public double benefits(int i, int j){
+        return benefits[i][j];
     }
 
     public void addEdgeProfit(int v, int w, double p){
@@ -234,15 +230,83 @@ public class Graph {
         visited[i][i] = true;
     }
 
+    public void invertMatrixValues(){
+        for (int i = 0; i < V; i++) {
+            for (int j : adj(i)) {
+                benefits[i][j] *= -1;
+            }
+        }
+    }
+
+    public int getLastValue(Map<Integer, Integer> path){
+        int lastval = 0;
+        for(Map.Entry<Integer,Integer> entry : path.entrySet()){
+            // int lastkey = entry.getKey();
+            lastval = entry.getValue();
+        }
+        return lastval;
+    }
+
+    public void second_actOptimalVal(Map<Integer, Integer> path){
+        int source = 0, target = 0;
+        for (Map.Entry<Integer, Integer> entry : path.entrySet()){
+            source = entry.getKey();
+            target = entry.getValue();
+            actOptimalValue(source, target);
+        }   
+    }
+
+    public void print_cycle(Map<Integer, Integer> path1, Map<Integer, Integer> path2){
+        System.out.println(optimalValue);
+
+        for (Map.Entry<Integer, Integer> entry1 : path1.entrySet()){
+            Integer key = entry1.getKey();
+            if (key == 0) {
+                System.out.print("d");
+            } else {
+                System.out.print(key);
+            }
+            System.out.print("->");
+        }
+
+        for (Map.Entry<Integer, Integer> entry2 : path2.entrySet()){
+            Integer key = entry2.getKey();
+            Integer val = entry2.getValue();
+            if (val == 0) {
+                System.out.print(key);
+                System.out.print("->");
+                System.out.print("d");
+                break;
+            } else {
+                System.out.print(key);
+                System.out.print("->");
+            }
+        }
+
+        System.out.println("");
+    }
+
     // Funcion principal del algoritmo que determina el ciclo
     // de costo maximo que pasa por el deposito
     public void runResolvePath(int di){
         benefitsMatrix();   // Se determina la matriz de beneficios
+        
         Map<Integer, Integer> path1 = new LinkedHashMap<>();
         Map<Integer, Integer> path2 = new LinkedHashMap<>();
-        path1 = resolvePath(di);  
-        System.out.println(path1);
-        path2 = minCostPath(2,di); //cableado, necesito el ultimo nodo visitado por el primer algoritmo
+        
+        path1 = resolvePath(di);
+        
+        invertMatrixValues();
+        
+        int breakPoint = getLastValue(path1);
+        dijkstra(breakPoint,di);
+        path2 = reconstruct_path(breakPoint,di);
+
+        invertMatrixValues();
+        
+        second_actOptimalVal(path2);
+
+        print_cycle(path1, path2);
     }   
 
     // Primer algoritmo para calcular el camino de maximo beneficio
@@ -251,20 +315,16 @@ public class Graph {
     public Map<Integer,Integer> resolvePath(int i){        
         // El nodo entrante se marca como visitado y se inicializa el camino
         visitVertex(i);
-        System.out.println("Visited vertex " + i);
         Map<Integer, Integer> path = new LinkedHashMap<>();
         // Si no hay nodos vecinos por visitar y todas las aristas son de costo negativo,
         // finaliza la recursion
         if (adjacent_visitedVertex(i) && adjacentP_edges(i)){
             Map<Integer, Integer> nothing = new LinkedHashMap<>();
-            System.out.println("nothing else, all bad edges");
             return nothing;
         } else {
             // Se encuentra el nodo vecino de maximo beneficio, se marca el camino del
             // nodo origen al vecino encontrado y se realiza la recursion con este nuevo nodo
             int maxSig = findMaxVecino(i);
-            System.out.println("Found maxSig: " + maxSig);
-            System.out.println("Benefit for maxSig is: " + benefits[i][maxSig] + "\n");
             path.put(i, maxSig);         
             crossEdge1(i, maxSig);
             path.putAll(resolvePath(maxSig));
@@ -272,143 +332,73 @@ public class Graph {
         }
     }
 
-    // public void initializeDistances(){
-    //     for (int i = 0; i<V ; i++ ) {
-    //         for (int j : adj(i)) {
-    //             distances[i][j] = Double.NEGATIVE_INFINITY;
-    //         }
-    //     }
-    // }
-
-    // public static void computePaths(Vertex source)
-    // {
-    //     source.minDistance = 0.;
-    //     PriorityQueue<Vertex> vertexQueue = new PriorityQueue<Vertex>();
-    // vertexQueue.add(source);
-
-    // while (!vertexQueue.isEmpty()) {
-    //     Vertex u = vertexQueue.poll();
-
-    //         // Visit each edge exiting u
-    //         for (Edge e : u.adjacencies)
-    //         {
-    //             Vertex v = e.target;
-    //             double weight = e.weight;
-    //             double distanceThroughU = u.minDistance + weight;
-    //     if (distanceThroughU < v.minDistance) {
-    //         vertexQueue.remove(v);
-
-    //         v.minDistance = distanceThroughU ;
-    //         v.previous = u;
-    //         vertexQueue.add(v);
-    //     }
-    //         }
-    //     }
-    // }
-
-    // public static List<Vertex> getShortestPathTo(Vertex target)
-    // {
-    //     List<Vertex> path = new ArrayList<Vertex>();
-    //     for (Vertex vertex = target; vertex != null; vertex = vertex.previous)
-    //         path.add(vertex);
-
-    //     Collections.reverse(path);
-    //     return path;
-    // }    
-
-
-
-
-
-
-    // Estoy pegado con esta mierda
-    // public Map<Integer,Integer> minCostPath(int i, int j){
-    //     System.out.println("");
-    //     System.out.println("Starting from vertex " + i);
-    //     int maxSig = findMaxVecino(i);
-    //     System.out.println("Detected min weight edge " + maxSig);
-    //     Map<Integer,Integer> minPath = new HashMap<>();
-    //     if (contains(i,j) ){
-    //         System.out.println("Detected deposit on sight");
-    //         crossEdge2(i,j);
-    //         minPath.put(i,j);
-    //         return minPath;
-    //     } else {
-    //         System.out.println("Crossing edge to next vertex");
-    //         crossEdge2(i,maxSig);
-    //         minPath.putAll(minCostPath(maxSig, j));
-    //         return minPath;
-    //     }
-    // }
-}
-
-public class AStar extends Graph{
-
-    private final Graph graph;
-
-    public AStar (Graph graph){
-        this.graph = graph;
-    } 
-
-     public class VertexComparator implements Comparator<int> {
-        public int compare(int nodeFirst, int nodeSecond) {
-            if (f[nodeFirst] > f[nodeSecond]) return 1;
-            if (f[nodeSecond] > f[nodeFirst]) return -1;
-            return 0;
-        }
-    } 
-
-    public List<int> astar(int source, int target){
-        final Queue<int> openSet = new PriorityQueue<>(11, new VertexComparator());
-        
-        // En nuestro caso, la heuristica representa el par entre
-        // el nodo en cuestion y sus costos a un siguiente nodo
-
-        setG(source, 0); //!!!!!!!!
-        calcF(source, target); //!!!!!!!
-        openSet.add(source);
-
-        final Map<int,int> path = new HashMap<>();
-        final Set<int> closedSet = new HashSet<>();
-
-        while (!openSet.isEmpty()) {
-            final int current = openSet.poll();
-
-            if (current == target) {return reconstruct_path(path, target);}
-
-            closedSet.add(current);
-
-            for (int neighbor : adj(current)){
-                if (closedSet.contains(neighbor)) {continue;}
-
-                double edgeCost = graph.benefits[current][neighbor];
-                double tentativeG = edgeCost + vertexG(current);    // !!!!!!!
-
-                if (tentativeG < vertexG(neighbor)){
-                    setG(neighbor, tentativeG); // !!!!!!!!!!
-                    calcF(neighbor, target);    // !!!!!!!!!!
-
-                    path.put(neighbor, current);
-                    if (!openSet.contains(neighbor)) {openSet.add(neighbor);}
-                }
+    public int getMinDistNode(List<Integer> list){
+        double min = Double.MAX_VALUE;
+        double tmpmin = min;
+        int tmpnode = 0;
+        for (int node : list){
+            min = Math.min(min, dist[node]);
+            if (tmpmin != min){
+                tmpnode = node;
+                tmpmin = min;
             }
         }
 
-        return null;
-    }   
-
-    private List<int> reconstruct_path(Map<int, int> path, int target) {
-        assert path != null;
-        // assert target != null;
-
-        final List<int> pathList = new ArrayList<int>();
-        pathList.add(target);
-        while (path.containsKey(target)) {
-            target = path.get(target);
-            pathList.add(target);
-        }
-        Collections.reverse(pathList);
-        return pathList;
+        return tmpnode;
     }
 
+    public void dijkstra(int source, int target){
+        dist[source] = 0;
+
+        // PriorityQueue<Integer> queue = new PriorityQueue<>(11, new IntComparator());
+        List<Integer> queue = new ArrayList<>();
+
+        for (int i = 0; i<V; i++){
+            if (i != source) {
+                dist[i] = Double.POSITIVE_INFINITY;
+                prev[i] = -1;
+            }
+            queue.add(i);
+        }
+
+        while(!queue.isEmpty()){
+            int u = getMinDistNode(queue);
+            if(u == target) {break;}
+
+            int indexNode = queue.indexOf(u);
+            queue.remove(indexNode);
+
+
+            for (int v : adj(u)) {
+                if(!queue.contains(v)) {continue;}
+                
+                double alt = dist[u] + benefits[u][v];
+
+                if (alt < dist[v]){
+                    dist[v] = alt;
+                    prev[v] = u;
+                }
+            }
+        }
+    }
+
+    public Map<Integer, Integer> reconstruct_path(int source, int target){
+        Stack<Integer> S = new Stack<>();
+        int u = target;
+
+        while(u != source){
+            S.push(u);
+            u = prev[u];
+        }
+        S.push(u);
+
+        Map<Integer, Integer> path = new LinkedHashMap<>();
+
+        int i,j;
+        while (S.size() > 1){
+            path.put(S.pop(), S.peek());
+        }
+
+        return path;
+    }
 }
